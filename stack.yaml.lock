@@ -10,4 +10,11 @@ snapshots:
     url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/18.yaml
     sha256: 63539429076b7ebbab6daa7656cfb079393bf644971156dc349d7c0453694ac2
     size: 586296
-packages: []
+packages:
+- original:
+    hackage: text-display-0.0.1.0@sha256:b8a94bf4188b77dbcdc7f8d290c998643780e8be5a5df58034b4098d19cd2481,1859
+  completed:
+    pantry-tree:
+      sha256: ee3ab08a0af09c07070394163857f516192d2f8072e6fc140d64e2bd5562be23
+      size: 330
+    hackage: text-display-0.0.1.0@sha256:b8a94bf4188b77dbcdc7f8d290c998643780e8be5a5df58034b4098d19cd2481,1859

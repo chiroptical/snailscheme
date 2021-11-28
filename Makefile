@@ -1,7 +1,7 @@
 build:
 	stack build
 
-test: build build-test
+test:
 	stack test
 
 format:

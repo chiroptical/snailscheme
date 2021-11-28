@@ -22,13 +22,14 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - text
-- parsec
+- megaparsec
 - mtl
 - containers
 
 default-extensions:
 - ImportQualifiedPost
 - OverloadedStrings
+- TypeApplications
 
 library:
   source-dirs: src
@@ -55,3 +56,5 @@ tests:
     dependencies:
     - snailscheme
     - hspec
+    - hspec-discover
+    - QuickCheck

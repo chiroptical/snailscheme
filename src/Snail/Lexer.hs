@@ -1,11 +1,11 @@
 module Snail.Lexer (
-    lexeme,
-    parens,
-    signedInteger,
-    skipBlockComment,
-    skipLineComment,
-    spaces,
-    symbol,
+  lexeme,
+  parens,
+  signedInteger,
+  skipBlockComment,
+  skipLineComment,
+  spaces,
+  symbol,
 ) where
 
 import Data.Text (Text)

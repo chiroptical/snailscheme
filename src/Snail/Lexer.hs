@@ -23,7 +23,7 @@ skipLineComment = L.skipLineComment ";"
 
 -- | Megaparsec's 'skipBlockComment' takes prefix and suffix and skips anything in between
 skipBlockComment :: Parser ()
-skipBlockComment = L.skipBlockComment "#|" "|#"
+skipBlockComment = L.skipBlockCommentNested "#|" "|#"
 
 -- | Generate a parser for whitespace in a language with 'skipLineComment' and 'skipBlockComment'
 spaces :: Parser ()

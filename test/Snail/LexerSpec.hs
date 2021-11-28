@@ -15,9 +15,11 @@ spec = do
     it "successfully parses block comments" $ do
       parseMaybe skipBlockComment "#| ... |#" `shouldBe` Just ()
     it "successfully parses nested block comments" $ do
-      parseMaybe skipBlockComment "#| ... #| ... #| ... |#" `shouldBe` Just ()
-    it "successfully parses nested block comments with missing internal stop" $ do
-      parseMaybe skipBlockComment "#| ... #| ... |#" `shouldBe` Just ()
+      parseMaybe skipBlockComment "#| ... #| ... |# ... |#" `shouldBe` Just ()
+    it "fails to parse nested block comments with missing internal start" $ do
+      parseMaybe skipBlockComment "#| ... |# ... |#" `shouldBe` Nothing
+    it "fails to parse nested block comments with missing internal stop" $ do
+      parseMaybe skipBlockComment "#| ... #| ... |#" `shouldBe` Nothing
     it "fails to parse block comment with missing stop" $ do
       parseMaybe skipBlockComment "#| ..." `shouldBe` Nothing
 

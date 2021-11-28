@@ -25,13 +25,14 @@ dependencies:
 - megaparsec
 - mtl
 - containers
-- directory
-- haskeline
+- vector
+- text-display
 
 default-extensions:
 - ImportQualifiedPost
 - OverloadedStrings
 - TypeApplications
+- LambdaCase
 
 library:
   source-dirs: src

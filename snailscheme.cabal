@@ -31,6 +31,7 @@ library
       Prim
       Repl
       Snail.Lexer
+      Snail.Types
   other-modules:
       Paths_snailscheme
   hs-source-dirs:
@@ -39,6 +40,7 @@ library
       ImportQualifiedPost
       OverloadedStrings
       TypeApplications
+      LambdaCase
   build-depends:
       base >=4.7 && <5
     , containers
@@ -47,6 +49,8 @@ library
     , megaparsec
     , mtl
     , text
+    , text-display
+    , vector
   default-language: Haskell2010
 
 executable snailscheme-exe
@@ -59,6 +63,7 @@ executable snailscheme-exe
       ImportQualifiedPost
       OverloadedStrings
       TypeApplications
+      LambdaCase
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -69,6 +74,8 @@ executable snailscheme-exe
     , mtl
     , snailscheme
     , text
+    , text-display
+    , vector
   default-language: Haskell2010
 
 test-suite snailscheme-test
@@ -84,6 +91,7 @@ test-suite snailscheme-test
       ImportQualifiedPost
       OverloadedStrings
       TypeApplications
+      LambdaCase
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
@@ -97,4 +105,6 @@ test-suite snailscheme-test
     , mtl
     , snailscheme
     , text
+    , text-display
+    , vector
   default-language: Haskell2010

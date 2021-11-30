@@ -11,9 +11,24 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+
+      - name: Cache stack libraries
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-stack-snailscheme
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('stack.yaml.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
       - name: Run tests
         run: stack test
+
       - name: Install fourmolu
         run: stack install fourmolu
+
       - name: Check formatting
         run: make format-check

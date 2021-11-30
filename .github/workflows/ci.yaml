@@ -1,4 +1,4 @@
-name: Run tests
+name: CI
 on: [pull_request, push]
 jobs:
   test:
@@ -6,4 +6,7 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-      - run: stack test
+      - name: Run tests
+        run: stack test
+      - name: Check formatting
+        run: make format-check

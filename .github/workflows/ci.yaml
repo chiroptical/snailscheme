@@ -1,9 +1,30 @@
-name: Run tests
-on: [pull_request, push]
+name: CI
+on:
+  push:
+    branches:
+    - master
+    - referenceImplementation
+  pull_request:
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-      - run: stack test
+
+      - name: Cache stack libraries
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-stack-snailscheme
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('stack.yaml.lock') }}
+
+      - name: Run tests
+        run: stack test
+
+      - name: Install fourmolu
+        run: stack install fourmolu
+
+      - name: Check formatting
+        run: make format-check

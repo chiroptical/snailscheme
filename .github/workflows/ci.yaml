@@ -7,6 +7,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Install stack
-        uses: sudo apt install stack
+        run: sudo apt install stack
       - name: Test
-        uses: stack test
+        run: stack test

@@ -7,6 +7,6 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Install stack
-        run: sudo apt install stack
+        run: wget -qO- https://get.haskellstack.org | sh
       - name: Test
         run: stack test

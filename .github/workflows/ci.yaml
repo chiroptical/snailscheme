@@ -19,10 +19,6 @@ jobs:
         with:
           path: ~/.stack
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('stack.yaml.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
 
       - name: Run tests
         run: stack test

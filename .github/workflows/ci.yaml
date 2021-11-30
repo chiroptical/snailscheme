@@ -1,0 +1,12 @@
+name: Run tests
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Install stack
+        uses: sudo apt install stack
+      - name: Test
+        uses: stack test

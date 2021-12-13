@@ -168,3 +168,4 @@ ensureAtom n = throw $ TypeMismatch "atom" n
 
 extractVar :: LispVal -> T.Text
 extractVar (Atom atom) = atom
+extractVar val = throw $ EnvironmentLookupOn val

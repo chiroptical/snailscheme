@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      Evaluation
       Lib
       LispVal
       Parser
@@ -38,6 +39,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , directory
     , mtl
     , parsec
     , text
@@ -56,6 +58,7 @@ executable snailscheme-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , directory
     , mtl
     , parsec
     , snailscheme
@@ -76,6 +79,7 @@ test-suite snailscheme-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , directory
     , hspec
     , mtl
     , parsec

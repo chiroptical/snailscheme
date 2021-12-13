@@ -33,6 +33,7 @@ style =
 reservedOp :: T.Text -> Parser ()
 reservedOp = Token.reservedOp lexer . T.unpack
 
+-- What is an Atom?
 parseAtom :: Parser LispVal
 parseAtom = Atom . T.pack <$> Token.identifier lexer
 

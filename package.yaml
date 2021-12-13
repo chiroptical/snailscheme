@@ -25,6 +25,7 @@ dependencies:
 - parsec
 - mtl
 - containers
+- directory
 
 default-extensions:
 - ImportQualifiedPost

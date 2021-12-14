@@ -110,5 +110,11 @@ contents p = do
 readExpr :: T.Text -> Either ParseError LispVal
 readExpr = parse (contents parseExpr) "<stdin>"
 
-readExprFile :: T.Text -> Either ParseError LispVal
-readExprFile = parse (contents parseList) "<file>"
+whitespace :: Parser ()
+whitespace = Token.whiteSpace lexer
+
+manyLispVal :: Parser [LispVal]
+manyLispVal = parseExpr `sepBy` whitespace
+
+readExprFile :: SourceName -> T.Text -> Either ParseError LispVal
+readExprFile = parse (contents (List <$> manyLispVal))

@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Evaluation where
 
 import Data.Map qualified as Map
@@ -21,17 +23,44 @@ import Control.Monad.Reader (
     ReaderT (runReaderT),
     asks,
  )
+import Prim
 
-type Prim = [(T.Text, LispVal)]
-type Unary = LispVal -> Eval LispVal
-type Binary = LispVal -> LispVal -> Eval LispVal
+evalText :: T.Text -> IO () --REPL
+evalText textExpr = do
+    stdlib <- getFileContents sTDLIB
+    res <- runASTinEnv basicEnv $ textToEvalForm stdlib textExpr
+    print res
 
-primEnv :: Prim
-primEnv = undefined
+textToEvalForm :: T.Text -> T.Text -> Eval LispVal
+textToEvalForm std input = either (throw . PError . show) evalBody $ parseWithLib std input
 
-unop :: Unary -> [LispVal] -> Eval LispVal
-unop op [x] = op x
-unop _ args = throw $ NumArgs 1 args
+parseWithLib :: T.Text -> T.Text -> Either ParseError LispVal
+parseWithLib std inp = do
+    stdlib <- readExprFile sTDLIB std
+    expr <- readExpr inp
+    return $ endOfList stdlib expr
+
+getFileContents :: FilePath -> IO T.Text
+getFileContents fname = do
+    exists <- doesFileExist fname
+    if exists then TIO.readFile fname else return "File does not exist."
+
+sTDLIB :: FilePath
+sTDLIB = "lib/stdlib.scm"
+
+endOfList :: LispVal -> LispVal -> LispVal
+endOfList (List x) expr = List $ x ++ [expr]
+endOfList n _ = throw $ TypeMismatch "failure to get variable: " n
+
+safeExec :: IO a -> IO (Either String a)
+safeExec m = do
+    result <- Control.Exception.try m
+    case result of
+        Left (eTop :: SomeException) ->
+            case fromException eTop of
+                Just (enclosed :: LispException) -> return $ Left (show enclosed)
+                Nothing -> return $ Left (show eTop)
+        Right val -> return $ Right val
 
 readFn :: LispVal -> Eval LispVal
 readFn (String txt) = lineToEvalForm txt
@@ -46,17 +75,11 @@ basicEnv =
         primEnv
             <> [("read", Fun . IFunc $ unop readFn)]
 
-evalFile :: T.Text -> IO () --program file
-evalFile fileExpr =
-    runASTinEnv basicEnv (fileToEvalForm fileExpr)
-        >>= print
+evalFile :: FilePath -> T.Text -> IO () --program file
+evalFile filePath fileExpr = runASTinEnv basicEnv (fileToEvalForm filePath fileExpr) >>= print
 
-fileToEvalForm :: T.Text -> Eval LispVal
-fileToEvalForm input =
-    either
-        (throw . PError . show)
-        evalBody
-        $ readExprFile input
+fileToEvalForm :: FilePath -> T.Text -> Eval LispVal
+fileToEvalForm filePath input = either (throw . PError . show) evalBody $ readExprFile filePath input
 
 runParseTest :: T.Text -> T.Text -- for view AST
 runParseTest input =
@@ -125,6 +148,9 @@ eval (List [Atom "define", varExpr, expr]) = do
     local envFn $ return varExpr
 eval (List [Atom "lambda", List params, expr]) = asks (Lambda (IFunc $ applyLambda expr params))
 eval (List (Atom "lambda" : _)) = throw $ BadSpecialForm "lambda"
+-- (delay x) => (lambda () x)
+eval (List [Atom "delay", expr]) = asks (Lambda (IFunc $ applyLambda expr []))
+eval (List (Atom "delay" : _)) = throw $ BadSpecialForm "delay"
 eval (List (x : xs)) = do
     funVar <- eval x
     xVal <- mapM eval xs
@@ -133,9 +159,6 @@ eval (List (x : xs)) = do
         (Lambda (IFunc internalfn) boundenv) -> local (const boundenv) $ internalfn xVal
         _ -> throw $ NotFunction funVar
 
--- (delay x) => (lambda () x)
-eval (List [Atom "delay", expr]) = asks (Lambda (IFunc $ applyLambda expr []))
-eval (List (Atom "delay" : _)) = throw $ BadSpecialForm "delay"
 -- catch all
 eval val = throw $ Default val
 

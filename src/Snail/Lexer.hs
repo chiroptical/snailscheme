@@ -6,6 +6,7 @@ module Snail.Lexer (
   skipLineComment,
   spaces,
   symbol,
+  Parser,
 ) where
 
 import Data.Text (Text)

@@ -7,19 +7,21 @@ import Data.Text.Lazy.Builder qualified as B
 
 data Expression
   = Nil
-  | Symbol Text
+  | Atom Text
   | Boolean Bool
   | Number Integer
-  | String Text
+  | -- Maybe this should be StringLiteral to avoid confusion with Haskell's String
+    String Text
   | Quote Expression
   | List [Expression]
-  | Lambda [Text] Expression
+  | -- (lambda (x y) (+ x y))
+    Lambda [Text] Expression
   deriving (Eq)
 
 instance Display Expression where
   displayBuilder = \case
     Nil -> "Nil"
-    Symbol expr -> B.fromText expr
+    Atom expr -> B.fromText expr
     Boolean True -> "#t"
     Boolean False -> "#f"
     Number int -> displayBuilder int

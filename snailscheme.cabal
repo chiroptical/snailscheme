@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Snail.Lexer
+      Snail.Parser
       Snail.Types
   other-modules:
       Paths_snailscheme

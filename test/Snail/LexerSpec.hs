@@ -25,7 +25,7 @@ spec = do
 
   describe "Parsing symbols" $ do
     it "successfully parses any valid symbol" $ do
-      forAll genSymbol $ \s -> parseMaybe (symbol s) s `shouldBe` Just s
+      forAll genAtom $ \s -> parseMaybe (symbol s) s `shouldBe` Just s
 
   describe "Signed and unsigned integers" $ do
     let tshow = T.pack . show

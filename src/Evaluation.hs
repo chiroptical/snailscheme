@@ -151,6 +151,21 @@ eval (List (Atom "lambda" : _)) = throw $ BadSpecialForm "lambda"
 -- (delay x) => (lambda () x)
 eval (List [Atom "delay", expr]) = asks (Lambda (IFunc $ applyLambda expr []))
 eval (List (Atom "delay" : _)) = throw $ BadSpecialForm "delay"
+eval all@(List [Atom "cdr", List [Atom "quote", List (x : xs)]]) = return $ List xs
+eval all@(List [Atom "cdr", arg@(List (x : xs))]) =
+    case x of
+        Atom _ -> do
+            val <- eval arg
+            eval $ List [Atom "cdr", val]
+        _ -> return $ List xs
+eval all@(List [Atom "car", List [Atom "quote", List (x : xs)]]) = return x
+eval all@(List [Atom "car", arg@(List (x : xs))]) =
+    case x of
+        Atom _ -> do
+            val <- eval arg
+            eval $ List [Atom "car", val]
+        _ -> return x
+-- catch all
 eval (List (x : xs)) = do
     funVar <- eval x
     xVal <- mapM eval xs
@@ -158,8 +173,6 @@ eval (List (x : xs)) = do
         (Fun (IFunc internalFn)) -> internalFn xVal
         (Lambda (IFunc internalfn) boundenv) -> local (const boundenv) $ internalfn xVal
         _ -> throw $ NotFunction funVar
-
--- catch all
 eval val = throw $ Default val
 
 applyLambda :: LispVal -> [LispVal] -> [LispVal] -> Eval LispVal

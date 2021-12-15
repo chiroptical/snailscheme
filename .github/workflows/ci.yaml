@@ -2,8 +2,7 @@ name: CI
 on:
   push:
     branches:
-    - master
-    - referenceImplementation
+    - main
   pull_request:
 jobs:
   test:

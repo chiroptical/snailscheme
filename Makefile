@@ -13,6 +13,9 @@ format-check:
 ghcid:
 	ghcid -c "stack repl"
 
+ghcid-test:
+	ghcid -c "stack ghci snailscheme:snailscheme-test"
+
 clean:
 	stack clean
 

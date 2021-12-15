@@ -21,16 +21,17 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- text
-- parsec
-- mtl
 - containers
-- directory
-- haskeline
+- megaparsec
+- mtl
+- text
+- text-display
 
 default-extensions:
 - ImportQualifiedPost
+- LambdaCase
 - OverloadedStrings
+- TypeApplications
 
 library:
   source-dirs: src
@@ -57,3 +58,5 @@ tests:
     dependencies:
     - snailscheme
     - hspec
+    - hspec-discover
+    - QuickCheck

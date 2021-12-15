@@ -25,11 +25,6 @@ source-repository head
 
 library
   exposed-modules:
-      Evaluation
-      LispVal
-      Parser
-      Prim
-      Repl
       Snail.Lexer
       Snail.Types
   other-modules:
@@ -44,8 +39,6 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
-    , directory
-    , haskeline
     , megaparsec
     , mtl
     , text
@@ -67,8 +60,6 @@ executable snailscheme-exe
   build-depends:
       base >=4.7 && <5
     , containers
-    , directory
-    , haskeline
     , megaparsec
     , mtl
     , snailscheme
@@ -95,8 +86,6 @@ test-suite snailscheme-test
       QuickCheck
     , base >=4.7 && <5
     , containers
-    , directory
-    , haskeline
     , hspec
     , hspec-discover
     , megaparsec

@@ -22,4 +22,4 @@ clean:
 hlint:
 	hlint .
 
-.PHONY: build test format format-check ghcid clean hlint
+.PHONY: build test format format-check ghcid ghcid-test clean hlint

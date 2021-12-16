@@ -24,6 +24,7 @@ dependencies:
 - containers
 - megaparsec
 - mtl
+- parser-combinators
 - text
 - text-display
 

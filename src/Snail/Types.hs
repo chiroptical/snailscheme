@@ -10,8 +10,7 @@ data Expression
   | Atom Text
   | Boolean Bool
   | Number Integer
-  | -- Maybe this should be StringLiteral to avoid confusion with Haskell's String
-    String Text
+  | StringLiteral Text
   | Quote Expression
   | List [Expression]
   | -- (lambda (x y) (+ x y))
@@ -25,7 +24,7 @@ instance Display Expression where
     Boolean True -> "#t"
     Boolean False -> "#f"
     Number int -> displayBuilder int
-    String str -> "\"" <> B.fromText str <> "\""
+    StringLiteral str -> "\"" <> B.fromText str <> "\""
     Quote ast -> "'" <> displayBuilder ast
     List exprs -> "(" <> B.fromText (T.unwords (display <$> exprs)) <> ")"
     Lambda exprs ast -> "<lambda (" <> B.fromText (T.unwords (display <$> exprs)) <> ") (" <> displayBuilder ast <> ")>"

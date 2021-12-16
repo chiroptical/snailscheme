@@ -1,5 +1,6 @@
 module Snail.Parser where
 
+import Control.Monad.Combinators.Expr
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Void
@@ -8,27 +9,32 @@ import Snail.Types
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+reservedWords :: [Text]
+reservedWords =
+  [ "true"
+  , "false"
+  ]
+
 validAtomCharacter :: String
 validAtomCharacter = ['a' .. 'z'] <> ['A' .. 'Z'] <> ['0' .. '9'] <> "!@#$%^&*\\/?'\"+=-_<>{}[]~`"
 
 parseAtomCharacter :: Parser Char
 parseAtomCharacter = oneOf validAtomCharacter
 
--- TODO: Test this, I think it will end up failing on something like '01'
 parseAtom :: Parser Expression
 parseAtom = do
   beginning <- parseAtomCharacter
   rest <- many parseAtomCharacter
   let atom = [beginning] <> rest
   pure $ case atom of
-    "#t" -> Boolean True
-    "#f" -> Boolean False
+    "true" -> Boolean True
+    "false" -> Boolean False
     _ -> Atom $ Text.pack atom
 
-parseText :: Parser Expression
-parseText = do
+parseStringLiteral :: Parser Expression
+parseStringLiteral = do
   char '"'
-  String . Text.pack <$> manyTill parseAtomCharacter (char '"')
+  StringLiteral . Text.pack <$> manyTill (parseAtomCharacter <|> spaceChar) (char '"')
 
 parseNumber :: Parser Expression
 parseNumber = Number <$> signedInteger
@@ -38,23 +44,24 @@ parseNumber = Number <$> signedInteger
 parseSExpression :: Parser Expression
 parseSExpression =
   -- Is this `concat` semantically correct?
-  List . concat <$> parens (many parseExpression `sepBy` spaces)
+  List . concat <$> parens (many parseExpression `sepBy` spaceChar)
 
 parseQuote :: Parser Expression
 parseQuote = do
   char '\''
-  Quote <$> parseExpression
+  Quote <$> parseTerm
 
 parseNil :: Parser Expression
-parseNil = do
-  symbol "Nil"
-  pure Nil
+parseNil = symbol "Nil" >> pure Nil
 
-parseExpression :: Parser Expression
-parseExpression =
+parseTerm :: Parser Expression
+parseTerm =
   (parseNil <?> "Nil")
+    <|> (parseQuote <?> "Quote")
     <|> (try parseNumber <?> "Number")
     <|> (parseAtom <?> "Atom")
-    <|> (parseText <?> "Text")
-    <|> (parseQuote <?> "Quote")
+    <|> (parseStringLiteral <?> "String Literal")
     <|> (parseSExpression <?> "SExpression")
+
+parseExpression :: Parser Expression
+parseExpression = makeExprParser parseTerm [] <?> "Expression"

@@ -1,6 +1,6 @@
 module Snail.LexerSpec (spec) where
 
-import Data.Text qualified as T
+import Data.Text qualified as Text
 import Property
 import Snail.Lexer
 import Test.Hspec
@@ -24,11 +24,11 @@ spec = do
       parseMaybe skipBlockComment "#| ..." `shouldBe` Nothing
 
   describe "Parsing symbols" $ do
-    it "successfully parses any valid symbol" $ do
+    it "successfully parses any valid atoms" $ do
       forAll genAtom $ \s -> parseMaybe (symbol s) s `shouldBe` Just s
 
   describe "Signed and unsigned integers" $ do
-    let tshow = T.pack . show
+    let tshow = Text.pack . show
     it "successfully parses positive and negative integers" $ do
       forAll arbitrary $
         \i -> parseMaybe signedInteger (tshow i) `shouldBe` Just i

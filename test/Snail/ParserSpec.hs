@@ -9,7 +9,7 @@ import Snail.Types
 import Test.Hspec
 import Test.QuickCheck
 import Text.Megaparsec
-import Text.Megaparsec.Char (eol)
+import Text.Megaparsec.Char
 
 spec :: Spec
 spec = do
@@ -18,6 +18,10 @@ spec = do
       forAll genAtom $ \s -> parseMaybe parseAtom s `shouldBe` Just (Atom s)
     it "successfully parses true and false" $ do
       forAll genBoolean $ \s -> parseMaybe parseAtom s `shouldSatisfy` isJust
+
+  describe "Parsers: numbers" $ do
+    it "fails to parse" $ do
+      parseMaybe parseNumber "01a" `shouldBe` Nothing
 
   describe "Parsers: quote" $ do
     it "successfully parses a quoted atom" $ do
@@ -39,12 +43,19 @@ spec = do
     it "successfully parses Nil" $ do
       parseMaybe parseNil "Nil" `shouldBe` Just Nil
 
+  describe "Parses: terms" $ do
+    it "fails to parse an invalid term" $ do
+      parseMaybe parseTerm "01a" `shouldBe` Nothing
+
+  describe "Parses: s-expressions" $ do
+    -- TODO: Why does this fail? Test above fails, but this works...
+    it "fails to parse an invalid s-expression" $ do
+      parseMaybe parseSExpression "(01a)" `shouldBe` Nothing
+    it "fails to parse an invalid s-expression" $ do
+      parseMaybe parseSExpression "(01 a)" `shouldBe` Just (List [Number 1, Atom "a"])
+
   describe "Parses: expressions" $ do
     it "successfully parses padded number" $ do
-      parseMaybe parseExpression "01" `shouldBe` Just (Number 1)
+      parseMaybe parseExpressions "(01 01)" `shouldBe` Just [List [Number 1, Number 1]]
     it "successfully parses padded number in a list" $ do
-      parseMaybe parseExpression "(01)" `shouldBe` Just (List [Number 1])
-
--- TODO: Figure this one out...
--- it "successfully parses atom disguised as number at first" $ do
---   parseMaybe parseExpression "(01a)" `shouldBe` Just (List [Atom "01a"])
+      parseMaybe parseExpressions "(01)" `shouldBe` Just [List [Number 1]]

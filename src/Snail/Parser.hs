@@ -1,6 +1,7 @@
 module Snail.Parser where
 
 import Control.Monad.Combinators.Expr
+import Control.Monad.IO.Class
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Void
@@ -11,20 +12,34 @@ import Text.Megaparsec.Char
 
 reservedWords :: [Text]
 reservedWords =
-  [ "true"
-  , "false"
+  [ "true" --  "#t" - seems like 'true' 'false' is just easier to read?
+  , "false" -- "#f"
   ]
 
-validAtomCharacter :: String
-validAtomCharacter = ['a' .. 'z'] <> ['A' .. 'Z'] <> ['0' .. '9'] <> "!@#$%^&*\\/?'\"+=-_<>{}[]~`"
+-- Reference: https://people.csail.mit.edu/jaffer/r5rs/Lexical-structure.html#Lexical-structure
+-- Technically, 'A'..'Z' isn't valid but seems fine?
+initialCharacter :: String
+initialCharacter = ['a' .. 'z'] <> ['A' .. 'Z']
 
-parseAtomCharacter :: Parser Char
-parseAtomCharacter = oneOf validAtomCharacter
+specialInitialCharacter :: String
+specialInitialCharacter = "!$%&*/:<=>?^_~"
+
+digitCharacter :: String
+digitCharacter = ['0' .. '9']
+
+specialSubsequentCharacter :: String
+specialSubsequentCharacter = "+-.@"
+
+parseInitialCharacter :: Parser Char
+parseInitialCharacter = oneOf $ initialCharacter <> specialInitialCharacter
+
+parseSubsequentCharacter :: Parser Char
+parseSubsequentCharacter = parseInitialCharacter <|> oneOf (specialSubsequentCharacter <> digitCharacter)
 
 parseAtom :: Parser Expression
 parseAtom = do
-  beginning <- parseAtomCharacter
-  rest <- many parseAtomCharacter
+  beginning <- parseInitialCharacter
+  rest <- many parseSubsequentCharacter
   let atom = [beginning] <> rest
   pure $ case atom of
     "true" -> Boolean True
@@ -34,17 +49,19 @@ parseAtom = do
 parseStringLiteral :: Parser Expression
 parseStringLiteral = do
   char '"'
-  StringLiteral . Text.pack <$> manyTill (parseAtomCharacter <|> spaceChar) (char '"')
+  StringLiteral . Text.pack <$> manyTill printChar (char '"')
 
+-- Consider the edge case `01a`, the parser will pull 01 off the front
+-- as a valid integer. However, this is not a valid token in Snailscheme.
 parseNumber :: Parser Expression
-parseNumber = Number <$> signedInteger
+parseNumber = Number <$> signedInteger <* lookAhead space
 
 -- (lambda (x y)
 --   (+ x y))
 parseSExpression :: Parser Expression
 parseSExpression =
   -- Is this `concat` semantically correct?
-  List . concat <$> parens (many parseExpression `sepBy` spaceChar)
+  List . concat <$> parens (many parseTerm `sepBy` space1)
 
 parseQuote :: Parser Expression
 parseQuote = do
@@ -58,10 +75,10 @@ parseTerm :: Parser Expression
 parseTerm =
   (parseNil <?> "Nil")
     <|> (parseQuote <?> "Quote")
-    <|> (try parseNumber <?> "Number")
     <|> (parseAtom <?> "Atom")
+    <|> (parseNumber <?> "Number")
     <|> (parseStringLiteral <?> "String Literal")
     <|> (parseSExpression <?> "SExpression")
 
-parseExpression :: Parser Expression
-parseExpression = makeExprParser parseTerm [] <?> "Expression"
+parseExpressions :: Parser [Expression]
+parseExpressions = many parseSExpression

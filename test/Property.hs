@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Property where
 
 import Data.Text (Text)
@@ -5,14 +7,18 @@ import Data.Text qualified as Text
 import Snail.Parser
 import Test.QuickCheck
 
-genValidAtomCharacter :: Gen Char
-genValidAtomCharacter = elements validAtomCharacter
-
 genAtom :: Gen Text
-genAtom =
+genAtom = do
+  first <- elements $ initialCharacter <> specialInitialCharacter
+  rest <-
+    listOf1 . elements $
+      initialCharacter
+        <> specialInitialCharacter
+        <> specialSubsequentCharacter
+        <> digitCharacter
   let notReserved = not . (`elem` reservedWords)
-      candidateAtom = Text.pack <$> listOf1 genValidAtomCharacter
-   in candidateAtom `suchThat` notReserved
+      candidateAtom = Text.pack $ first : rest
+  pure candidateAtom `suchThat` notReserved
 
 genBoolean :: Gen Text
 genBoolean = elements ["true", "false"]

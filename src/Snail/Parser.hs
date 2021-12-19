@@ -2,10 +2,12 @@ module Snail.Parser where
 
 import Control.Monad.Combinators.Expr
 import Control.Monad.IO.Class
+import Data.Map.Strict qualified as Map
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Void
-import Snail.Lexer
+import Snail.Lexer (Parser)
+import Snail.Lexer qualified as Lexer
 import Snail.Types
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -14,6 +16,7 @@ reservedWords :: [Text]
 reservedWords =
   [ "true" --  "#t" - seems like 'true' 'false' is just easier to read?
   , "false" -- "#f"
+  , "nil"
   ]
 
 -- Reference: https://people.csail.mit.edu/jaffer/r5rs/Lexical-structure.html#Lexical-structure
@@ -36,6 +39,10 @@ parseInitialCharacter = oneOf $ initialCharacter <> specialInitialCharacter
 parseSubsequentCharacter :: Parser Char
 parseSubsequentCharacter = parseInitialCharacter <|> oneOf (specialSubsequentCharacter <> digitCharacter)
 
+-- We only need this to parse plus/minus when they aren't attached to a number, e.g. (+ 2 1)
+parseOperator :: Parser Expression
+parseOperator = Atom . Text.pack . pure <$> oneOf ("+-" :: String)
+
 parseAtom :: Parser Expression
 parseAtom = do
   beginning <- parseInitialCharacter
@@ -44,6 +51,7 @@ parseAtom = do
   pure $ case atom of
     "true" -> Boolean True
     "false" -> Boolean False
+    "nil" -> Nil
     _ -> Atom $ Text.pack atom
 
 parseStringLiteral :: Parser Expression
@@ -51,32 +59,76 @@ parseStringLiteral = do
   char '"'
   StringLiteral . Text.pack <$> manyTill printChar (char '"')
 
--- Consider the edge case `01a`, the parser will pull 01 off the front
--- as a valid integer. However, this is not a valid token in Snailscheme.
+parseListOf :: Parser a -> Parser [a]
+parseListOf p =
+  Lexer.parens (p `sepBy` Lexer.spaces)
+
 parseNumber :: Parser Expression
-parseNumber = Number <$> signedInteger <* lookAhead space
+parseNumber = Number <$> Lexer.signedInteger
+
+parseVariable :: Parser Text
+parseVariable = Lexer.lexeme $ do
+  beginning <- parseInitialCharacter
+  rest <- many parseSubsequentCharacter
+  let atom = [beginning] <> rest
+  pure $ Text.pack atom
+
+parseVariables :: Parser [Text]
+parseVariables = parseListOf parseVariable
+
+parseLambda :: Parser Expression
+parseLambda = do
+  Lexer.symbol "lambda"
+  variables <- parseVariables
+  Lambda variables <$> parseTerm
+
+parseBinding :: Parser (Text, Expression)
+parseBinding = Lexer.parens $ do
+  variable <- parseVariable
+  term <- parseTerm
+  pure (variable, term)
+
+parseBindings :: Parser [(Text, Expression)]
+parseBindings = parseListOf parseBinding
+
+parseLet :: Parser Expression
+parseLet = do
+  Lexer.symbol "let"
+  bindings <- parseBindings
+  Let bindings <$> parseTerm
+
+parseIf :: Parser Expression
+parseIf = do
+  Lexer.symbol "if"
+  predicate <- parseSExpression
+  thenBranch <- parseTerm
+  If predicate thenBranch <$> parseTerm
+
+parseDefine :: Parser Expression
+parseDefine = do
+  Lexer.symbol "define"
+  name <- parseVariable
+  Define name <$> parseTerm
 
 -- (lambda (x y)
 --   (+ x y))
 parseSExpression :: Parser Expression
 parseSExpression =
-  -- Is this `concat` semantically correct?
-  List . concat <$> parens (many parseTerm `sepBy` space1)
+  List <$> Lexer.parens (parseTerm `sepBy` Lexer.spaces)
 
 parseQuote :: Parser Expression
 parseQuote = do
   char '\''
   Quote <$> parseTerm
 
-parseNil :: Parser Expression
-parseNil = symbol "Nil" >> pure Nil
-
+-- Maybe we can remove this try
+-- http://blog.ezyang.com/2014/05/parsec-try-a-or-b-considered-harmful
 parseTerm :: Parser Expression
 parseTerm =
-  (parseNil <?> "Nil")
-    <|> (parseQuote <?> "Quote")
+  (parseQuote <?> "Quote")
     <|> (parseAtom <?> "Atom")
-    <|> (parseNumber <?> "Number")
+    <|> (try parseNumber <?> "Number")
+    <|> (parseOperator <?> "Operator")
     <|> (parseStringLiteral <?> "String Literal")
     <|> (parseSExpression <?> "SExpression")
 

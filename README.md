@@ -26,8 +26,10 @@ from Scheme.
 ## Motivations
 
 This project was motivated from [Write Yourself a Scheme in 48 Hours][wyas],
-[Write You a Scheme, Version 2][wyas2], and [Intrigue][intrigue].
+[Write You a Scheme, Version 2][wyas2], [Intrigue][intrigue], and [Write a
+Lisp][wal]
 
 [wyas]: https://en.wikibooks.org/wiki/Write_Yourself_a_Scheme_in_48_Hours
 [wyas2]: https://www.wespiser.com/writings/wyas/home.html
 [intrigue]: https://github.com/Kleidukos/Intrigue
+[wal]: https://github.com/kanaka/mal/tree/master/impls/haskell

@@ -15,19 +15,41 @@ data Expression
   | List [Expression]
   | -- (lambda (x y) (+ x y))
     Lambda [Text] Expression
-  deriving (Eq)
+  | -- (let ((x 1) (y 1)) (+ x y))
+    Let [(Text, Expression)] Expression
+  | -- (if (< x y) y x)
+    If Expression Expression Expression
+  | -- (define x 1)
+    Define Text Expression
+  deriving (Eq, Show)
 
 instance Display Expression where
   displayBuilder = \case
-    Nil -> "Nil"
+    Nil -> "nil"
     Atom expr -> B.fromText expr
-    Boolean True -> "#t"
-    Boolean False -> "#f"
+    Boolean True -> "true"
+    Boolean False -> "false"
     Number int -> displayBuilder int
     StringLiteral str -> "\"" <> B.fromText str <> "\""
     Quote ast -> "'" <> displayBuilder ast
     List exprs -> "(" <> B.fromText (T.unwords (display <$> exprs)) <> ")"
-    Lambda exprs ast -> "<lambda (" <> B.fromText (T.unwords (display <$> exprs)) <> ") (" <> displayBuilder ast <> ")>"
-
-instance Show Expression where
-  show = T.unpack . display
+    Lambda exprs ast ->
+      "<lambda ("
+        <> B.fromText (T.unwords (display <$> exprs))
+        <> ") ("
+        <> displayBuilder ast
+        <> ")>"
+    Let bindings ast ->
+      "let ("
+        <> B.fromText (T.unwords (display <$> bindings))
+        <> ") ("
+        <> displayBuilder ast
+        <> ")>"
+    If expr then' else' ->
+      "if ("
+        <> displayBuilder expr
+        <> ") then ("
+        <> displayBuilder then'
+        <> ") else ("
+        <> displayBuilder else'
+        <> ")"

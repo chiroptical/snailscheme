@@ -16,4 +16,7 @@ ghcid:
 clean:
 	stack clean
 
-.PHONY: build test format format-check ghcid clean
+hlint:
+	hlint .
+
+.PHONY: build test format format-check ghcid clean hlint

@@ -30,10 +30,10 @@ spec = do
   describe "Signed and unsigned integers" $ do
     let tshow = T.pack . show
     it "successfully parses positive and negative integers" $ do
-      forAll (arbitrary @Integer) $
+      forAll arbitrary $
         \i -> parseMaybe signedInteger (tshow i) `shouldBe` Just i
     it "successfully parses positive signed integers" $ do
-      forAll (arbitrary @Integer) $
+      forAll arbitrary $
         \i -> parseMaybe signedInteger ("+ " <> tshow (abs i)) `shouldBe` Just (abs i)
 
   describe "Parsing parens" $ do

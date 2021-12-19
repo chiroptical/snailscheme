@@ -27,3 +27,9 @@ jobs:
 
       - name: Check formatting
         run: make format-check
+
+      - name: Install hlint
+        run: stack install hlint
+
+      - name: Check hints
+        run: make hlint

@@ -26,7 +26,7 @@ jobs:
         uses: cachix/install-nix-action@v16
 
       - name: Check formatting
-        run: nix-shell -p pkgs.haskellPackages.fourmolu --command 'make format-check'
+        run: nix-shell -p haskellPackages.fourmolu --command 'make format-check'
 
       - name: Check hints
-        run: nix-shell -p pkgs.haskellPackages.hlint --command 'make hlint'
+        run: nix-shell -p haskellPackages.hlint --command 'make hlint'

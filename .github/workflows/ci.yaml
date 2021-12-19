@@ -22,14 +22,11 @@ jobs:
       - name: Run tests
         run: stack test
 
-      - name: Install fourmolu
-        run: stack install fourmolu
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
 
       - name: Check formatting
-        run: make format-check
-
-      - name: Install hlint
-        run: stack install hlint
+        run: nix-shell -p pkgs.haskellPackages.fourmolu --command 'make format-check'
 
       - name: Check hints
-        run: make hlint
+        run: nix-shell -p pkgs.haskellPackages.hlint --command 'make hlint'

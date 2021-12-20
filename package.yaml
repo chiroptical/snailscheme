@@ -31,7 +31,6 @@ default-extensions:
 - ImportQualifiedPost
 - LambdaCase
 - OverloadedStrings
-- TypeApplications
 
 library:
   source-dirs: src

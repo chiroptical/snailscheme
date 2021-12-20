@@ -1,6 +1,5 @@
 module Snail.Parser where
 
-import Control.Monad.Combinators.Expr
 import Control.Monad.IO.Class
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)

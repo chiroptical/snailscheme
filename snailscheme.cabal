@@ -41,7 +41,6 @@ library
     , containers
     , megaparsec
     , mtl
-    , parser-combinators
     , text
     , text-display
   default-language: Haskell2010
@@ -62,7 +61,6 @@ executable snailscheme-exe
     , containers
     , megaparsec
     , mtl
-    , parser-combinators
     , snailscheme
     , text
     , text-display
@@ -91,7 +89,6 @@ test-suite snailscheme-test
     , hspec-discover
     , megaparsec
     , mtl
-    , parser-combinators
     , snailscheme
     , text
     , text-display

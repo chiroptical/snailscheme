@@ -1,52 +1,46 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Snail.LexerSpec (spec) where
 
-import Data.Text qualified as T
 import Property
 import Snail.Lexer
 import Test.Hspec
 import Test.QuickCheck
-import Text.Megaparsec
+import Text.Megaparsec (parseMaybe, sepBy)
 
 spec :: Spec
 spec = do
-  describe "Parsing comments" $ do
-    it "successfully parses line comments" $ do
-      parseMaybe skipLineComment "; ..." `shouldBe` Just ()
-    it "successfully parses block comments" $ do
-      parseMaybe skipBlockComment "#| ... |#" `shouldBe` Just ()
-    it "successfully parses nested block comments" $ do
-      parseMaybe skipBlockComment "#| ... #| ... |# ... |#" `shouldBe` Just ()
-    it "fails to parse nested block comments with missing internal start" $ do
-      parseMaybe skipBlockComment "#| ... |# ... |#" `shouldBe` Nothing
-    it "fails to parse nested block comments with missing internal stop" $ do
-      parseMaybe skipBlockComment "#| ... #| ... |#" `shouldBe` Nothing
-    it "fails to parse block comment with missing stop" $ do
-      parseMaybe skipBlockComment "#| ..." `shouldBe` Nothing
+  describe "parse tokens" $ do
+    it "successfully lex a basic token" $ do
+      parseMaybe potential "abc" `shouldBe` Just "abc"
 
-  describe "Parsing symbols" $ do
-    it "successfully parses any valid symbol" $ do
-      forAll genSymbol $ \s -> parseMaybe (symbol s) s `shouldBe` Just s
+    it "successfully lex a basic token" $ do
+      parseMaybe sExpression "(a b c)" `shouldBe` Just ["a"]
 
-  describe "Signed and unsigned integers" $ do
-    let tshow = T.pack . show
-    it "successfully parses positive and negative integers" $ do
-      forAll arbitrary $
-        \i -> parseMaybe signedInteger (tshow i) `shouldBe` Just i
-    it "successfully parses positive signed integers" $ do
-      forAll arbitrary $
-        \i -> parseMaybe signedInteger ("+ " <> tshow (abs i)) `shouldBe` Just (abs i)
+-- describe "parse s-expression" $ do
+--   it "successfully lex a basic s-expression" $ do
+--     parseMaybe sExpression "(abc)" `shouldBe` Just ["abc"]
+--   it "successfully lex a basic s-expression" $ do
+--     parseMaybe sExpression "(1 a)" `shouldBe` Just ["1", "a"]
+--   it "successfully lex a basic s-expression" $ do
+--     parseMaybe sExpression "(1a)" `shouldBe` Just ["1a"]
 
-  describe "Parsing parens" $ do
-    it "fails to parse parens of line comment" $ do
-      parseMaybe (parens skipLineComment) "( ; ... )" `shouldBe` Nothing
-    it "successfully parses parens of integer" $ do
-      parseMaybe (parens signedInteger) "(42)" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "( 42 )" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "(-42)" `shouldBe` Just (-42)
-      parseMaybe (parens signedInteger) "( -42 )" `shouldBe` Just (-42)
-    it "successfully parses parens of positive signed integer" $ do
-      parseMaybe (parens signedInteger) "(+42)" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "( +42 )" `shouldBe` Just 42
-    it "successfully parses parens of integer with a block comment" $ do
-      parseMaybe (parens signedInteger) "( #|...|# 42 )" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "( 42 #|...|# )" `shouldBe` Just 42
+--   describe "parse s-expressions" $ do
+--     -- Comments
+--     it "successfully lex line comments" $ do
+--       parseMaybe sExpressions "(; ...)" `shouldBe` Just []
+--     it "successfully lex block comments" $ do
+--       parseMaybe sExpressions "(#| ... |#)" `shouldBe` Just []
+--     it "successfully lex nested block comments" $ do
+--       parseMaybe sExpressions "(#| ... #| ... |# ... |#)" `shouldBe` Just []
+--     it "fail to lex nested block comments with missing internal start" $ do
+--       parseMaybe sExpressions "(#| ... |# ... |#)" `shouldBe` Nothing
+--     it "fail to lex nested block comments with missing internal stop" $ do
+--       parseMaybe sExpressions "(#| ... #| ... |#)" `shouldBe` Nothing
+--     it "fail to lex block comment with missing stop" $ do
+--       parseMaybe sExpressions "(#| ...)" `shouldBe` Nothing
+--
+--     it "successfully lexes" $ do
+--       parseMaybe sExpressions "(1a)" `shouldBe` Just [["1a"]]
+--     it "parses" $ do
+--       parseMaybe sExpressions "(1 a)" `shouldBe` Just [["1", "a"]]

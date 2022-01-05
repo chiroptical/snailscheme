@@ -1,16 +1,19 @@
 module Snail.Lexer (
-  lexeme,
-  parens,
-  signedInteger,
-  skipBlockComment,
-  skipLineComment,
-  spaces,
-  symbol,
+  -- * Character lists
+  initialCharacter,
+  specialInitialCharacter,
+  digitCharacter,
+  specialSubsequentCharacter,
+
+  -- * The only parser you'll ever need
+  potential,
+  sExpression,
 ) where
 
 import Data.Text (Text)
+import Data.Text qualified as Text
 import Data.Void
-import Text.Megaparsec
+import Text.Megaparsec hiding (token)
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 
@@ -29,22 +32,51 @@ skipBlockComment = L.skipBlockCommentNested "#|" "|#"
 spaces :: Parser ()
 spaces = L.space space1 skipLineComment skipBlockComment
 
--- | A 'lexeme' is ...
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme spaces
-
 -- | Parse a 'Text' verbatim
 symbol :: Text -> Parser Text
 symbol = L.symbol spaces
 
--- | Parse an 'Integer' as a lexeme
-integer :: Parser Integer
-integer = lexeme L.decimal
-
--- | Parse a signed 'Integer'
-signedInteger :: Parser Integer
-signedInteger = L.signed spaces integer
-
 -- | Parse an S-Expression
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
+
+-- | A 'lexeme' is ...
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme spaces
+
+-- | ...
+initialCharacter :: String
+initialCharacter = ['a' .. 'z'] <> ['A' .. 'Z']
+
+-- | ...
+specialInitialCharacter :: String
+specialInitialCharacter = "!$%&*/:<=>?^_~"
+
+-- | ...
+digitCharacter :: String
+digitCharacter = ['0' .. '9']
+
+-- | ...
+specialSubsequentCharacter :: String
+specialSubsequentCharacter = "+-.@"
+
+-- | The list of valid token characters, note that we allow invalid tokens at this point
+validCharacter :: Parser Char
+validCharacter =
+  oneOf
+    ( initialCharacter
+        <> specialInitialCharacter
+        <> digitCharacter
+        <> specialSubsequentCharacter
+    )
+
+parseListOf :: Parser a -> Parser [a]
+parseListOf p =
+  parens (p `sepBy` spaces)
+
+-- | ...
+potential :: Parser Text
+potential = Text.pack <$> many validCharacter
+
+sExpression :: Parser [Text]
+sExpression = parens (potential `sepBy` spaces)

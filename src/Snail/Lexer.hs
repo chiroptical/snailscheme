@@ -6,29 +6,36 @@ module Snail.Lexer (
   specialSubsequentCharacter,
 
   -- * The only parser you'll ever need
-  potential,
+  SExpression (..),
   sExpression,
 ) where
 
+import Data.Functor (($>))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Void
-import Text.Megaparsec hiding (token)
+import Text.Megaparsec hiding (Tokens (..))
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 
 -- | TODO: 'Void' is the error type but we should use an explicit error type
 type Parser = Parsec Void Text
 
--- | Megaparsec's 'skipLineComment' takes a prefix and skips lines that begin with that prefix
+{- | Megaparsec's 'skipLineComment' takes a prefix and skips lines that begin
+ with that prefix
+-}
 skipLineComment :: Parser ()
 skipLineComment = L.skipLineComment ";"
 
--- | Megaparsec's 'skipBlockComment' takes prefix and suffix and skips anything in between
+{- | Megaparsec's 'skipBlockComment' takes prefix and suffix and skips anything
+ in between
+-}
 skipBlockComment :: Parser ()
 skipBlockComment = L.skipBlockCommentNested "#|" "|#"
 
--- | Generate a parser for whitespace in a language with 'skipLineComment' and 'skipBlockComment'
+{- | Generate a parser for whitespace in a language with 'skipLineComment' and
+ 'skipBlockComment'
+-}
 spaces :: Parser ()
 spaces = L.space space1 skipLineComment skipBlockComment
 
@@ -70,13 +77,20 @@ validCharacter =
         <> specialSubsequentCharacter
     )
 
-parseListOf :: Parser a -> Parser [a]
-parseListOf p =
-  parens (p `sepBy` spaces)
+-- | ...
+data SExpression
+  = Token Text
+  | SExpression [SExpression]
+  deriving (Eq, Show)
 
 -- | ...
-potential :: Parser Text
-potential = Text.pack <$> many validCharacter
+term :: Parser SExpression
+term = text <|> sExpression
 
-sExpression :: Parser [Text]
-sExpression = parens (potential `sepBy` spaces)
+-- | ...
+text :: Parser SExpression
+text = Token . Text.pack <$> some validCharacter
+
+-- | ...
+sExpression :: Parser SExpression
+sExpression = SExpression <$> parens (term `sepEndBy` spaces)

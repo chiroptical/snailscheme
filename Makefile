@@ -13,10 +13,13 @@ format-check:
 ghcid:
 	ghcid -c "stack repl"
 
+ghcid-test:
+	ghcid -c "stack ghci snailscheme:snailscheme-test"
+
 clean:
 	stack clean
 
 hlint:
 	hlint .
 
-.PHONY: build test format format-check ghcid clean hlint
+.PHONY: build test format format-check ghcid ghcid-test clean hlint

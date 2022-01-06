@@ -79,7 +79,7 @@ validCharacter =
 
 -- | ...
 data SExpression
-  = Token Text
+  = Token (SourcePos, Text)
   | SExpression [SExpression]
   deriving (Eq, Show)
 
@@ -89,7 +89,10 @@ term = text <|> sExpression
 
 -- | ...
 text :: Parser SExpression
-text = Token . Text.pack <$> some validCharacter
+text = do
+  token <- some validCharacter
+  sourcePos <- getSourcePos
+  pure $ Token (sourcePos, Text.pack token)
 
 -- | ...
 sExpression :: Parser SExpression

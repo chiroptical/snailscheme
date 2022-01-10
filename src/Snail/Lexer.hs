@@ -1,19 +1,15 @@
 module Snail.Lexer (
-  -- * Character lists
-  initialCharacter,
-  specialInitialCharacter,
-  digitCharacter,
-  specialSubsequentCharacter,
-
   -- * The only parser you'll ever need
   SExpression (..),
   sExpression,
 ) where
 
+import Control.Monad (when)
 import Data.Functor (($>))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Void
+import Snail.Characters
 import Text.Megaparsec hiding (Tokens (..))
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
@@ -51,22 +47,6 @@ parens = between (symbol "(") (symbol ")")
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme spaces
 
--- | ...
-initialCharacter :: String
-initialCharacter = ['a' .. 'z'] <> ['A' .. 'Z']
-
--- | ...
-specialInitialCharacter :: String
-specialInitialCharacter = "!$%&*/:<=>?^_~"
-
--- | ...
-digitCharacter :: String
-digitCharacter = ['0' .. '9']
-
--- | ...
-specialSubsequentCharacter :: String
-specialSubsequentCharacter = "+-.@"
-
 -- | The list of valid token characters, note that we allow invalid tokens at this point
 validCharacter :: Parser Char
 validCharacter =
@@ -77,7 +57,29 @@ validCharacter =
         <> specialSubsequentCharacter
     )
 
--- | ...
+{- | A possibly empty tree of s-expressions
+
+ Technically,
+ @
+ Token (SourcePos {..}, "hello")
+ @
+
+ isn't a valid s-expression. This is,
+
+ @
+ SExpression [Token (SourcePos {..}, "hello")]
+ @
+
+ and this is also valid,
+
+ @
+ SExpression []
+ @
+
+ The 'Data.Tree.Tree' type in containers is non-empty which isn't exactly what we are looking for
+
+ TODO: can we have a smart constructor only?
+-}
 data SExpression
   = Token (SourcePos, Text)
   | SExpression [SExpression]
@@ -90,9 +92,9 @@ term = text <|> sExpression
 -- | ...
 text :: Parser SExpression
 text = do
+  sourcePosition <- getSourcePos
   token <- some validCharacter
-  sourcePos <- getSourcePos
-  pure $ Token (sourcePos, Text.pack token)
+  pure $ Token (sourcePosition, Text.pack token)
 
 -- | ...
 sExpression :: Parser SExpression

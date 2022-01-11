@@ -2,6 +2,7 @@ module Snail.Lexer (
   -- * The only parser you'll ever need
   SExpression (..),
   sExpression,
+  sExpressions,
 ) where
 
 import Control.Monad (when)
@@ -79,6 +80,7 @@ validCharacter =
  The 'Data.Tree.Tree' type in containers is non-empty which isn't exactly what we are looking for
 
  TODO: can we have a smart constructor only?
+ TODO: add TextLiteral for literal strings (check r5rs for literal string syntax, I think it is "..." and not '...')
 -}
 data SExpression
   = Token (SourcePos, Text)
@@ -99,3 +101,6 @@ text = do
 -- | ...
 sExpression :: Parser SExpression
 sExpression = SExpression <$> parens (term `sepEndBy` spaces)
+
+sExpressions :: Parser [SExpression]
+sExpressions = spaces *> sExpression `sepEndBy1` spaces

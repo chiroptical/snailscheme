@@ -3,7 +3,7 @@
 
 module Snail.LexerSpec (spec) where
 
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing)
 import Data.Text
 import Property
 import Snail.Lexer
@@ -32,22 +32,25 @@ sExpressionShouldBe input output = do
       tokens = foldTokens sExpr
   tokens `shouldBe` output
 
+textLiteralShouldBe :: Text -> Text -> Expectation
+textLiteralShouldBe input output = do
+  let mSExpr = parseMaybe textLiteral input
+  mSExpr `shouldSatisfy` isJust
+  let Just (TextLiteral (_, result)) = mSExpr
+  result `shouldBe` output
+
 spec :: Spec
 spec = do
   describe "parse text literals" $ do
     it "successfully parses a basic text literal" $ do
-      parseTest textLiteral [r|"hello \"world"|]
-      let mSExpr = parseMaybe textLiteral [r|"hello world"|]
-      mSExpr `shouldSatisfy` isJust
-      let Just (TextLiteral (_, txt)) = mSExpr
-      txt `shouldBe` "hello world"
+      [r|"hello \"world"|] `textLiteralShouldBe` [r|hello \"world|]
 
-    it "successfully parses a text literal with quotes" $ do
-      parseTest textLiteral [r|"hello \"world"|]
-      let mSExpr = parseMaybe textLiteral [r|"hello \"world"|]
-      mSExpr `shouldSatisfy` isJust
-      let Just (TextLiteral (_, txt)) = mSExpr
-      txt `shouldBe` "hello \"world"
+    it "successfully parses a text literal with leading/trailing quotes" $ do
+      [r|"\"hello \"world\""|] `textLiteralShouldBe` [r|\"hello \"world\"|]
+
+    it "fails to lex text literal with unescaped quote" $ do
+      let mSExpr = parseMaybe textLiteral [r|"hello "world"|]
+      mSExpr `shouldSatisfy` isNothing
 
   describe "parse sExpression" $ do
     it "successfully lex a basic list" $ do

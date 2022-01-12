@@ -25,3 +25,7 @@ spec = do
     it "lex should fail with non-terminated s-expression" $ do
       eResults <- readSnailFile "examples/fail.snail"
       eResults `shouldSatisfy` isLeft
+
+    it "lex should fail with non-escaped quote" $ do
+      eResults <- readSnailFile "examples/fail-quotes.snail"
+      eResults `shouldSatisfy` isLeft

@@ -1,5 +1,5 @@
-; Prints "hello world" to the console
-(print "hello world")
+; Prints `hello "world"` to the console
+(print "hello \"world\"")
 
 ; Prints 3 to the console
 (print (+ 1 2))

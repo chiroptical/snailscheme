@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Snail.LexerSpec (spec) where
 
@@ -9,12 +10,14 @@ import Snail.Lexer
 import Test.Hspec
 import Test.QuickCheck
 import Text.Megaparsec (parseMaybe, parseTest)
+import Text.RawString.QQ
 
 foldTokens :: SExpression -> [Text]
 foldTokens = go []
   where
     go :: [Text] -> SExpression -> [Text]
     go acc (Token (_, t)) = acc ++ [t]
+    go acc (TextLiteral (_, t)) = acc ++ [t]
     go acc (SExpression []) = acc
     go acc (SExpression (x : xs)) = lgo (go acc x) xs
     lgo :: [Text] -> [SExpression] -> [Text]
@@ -31,6 +34,21 @@ sExpressionShouldBe input output = do
 
 spec :: Spec
 spec = do
+  describe "parse text literals" $ do
+    it "successfully parses a basic text literal" $ do
+      parseTest textLiteral [r|"hello \"world"|]
+      let mSExpr = parseMaybe textLiteral [r|"hello world"|]
+      mSExpr `shouldSatisfy` isJust
+      let Just (TextLiteral (_, txt)) = mSExpr
+      txt `shouldBe` "hello world"
+
+    it "successfully parses a text literal with quotes" $ do
+      parseTest textLiteral [r|"hello \"world"|]
+      let mSExpr = parseMaybe textLiteral [r|"hello \"world"|]
+      mSExpr `shouldSatisfy` isJust
+      let Just (TextLiteral (_, txt)) = mSExpr
+      txt `shouldBe` "hello \"world"
+
   describe "parse sExpression" $ do
     it "successfully lex a basic list" $ do
       "(a b c)" `sExpressionShouldBe` ["a", "b", "c"]

@@ -1,8 +1,13 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Snail.Lexer (
-  -- * The only parser you'll ever need
+  -- * The parsers you should use
   SExpression (..),
   sExpression,
   sExpressions,
+
+  -- * Exported for testing
+  textLiteral,
 ) where
 
 import Control.Monad (when)
@@ -11,9 +16,10 @@ import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Void
 import Snail.Characters
-import Text.Megaparsec hiding (Tokens (..))
+import Text.Megaparsec hiding (Tokens (..), token)
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
+import Text.RawString.QQ
 
 -- | TODO: 'Void' is the error type but we should use an explicit error type
 type Parser = Parsec Void Text
@@ -84,19 +90,29 @@ validCharacter =
 -}
 data SExpression
   = Token (SourcePos, Text)
+  | TextLiteral (SourcePos, Text)
   | SExpression [SExpression]
   deriving (Eq, Show)
 
 -- | ...
 term :: Parser SExpression
-term = text <|> sExpression
+term = token <|> sExpression
 
 -- | ...
-text :: Parser SExpression
-text = do
+token :: Parser SExpression
+token = do
   sourcePosition <- getSourcePos
   token <- some validCharacter
   pure $ Token (sourcePosition, Text.pack token)
+
+-- | ...
+textLiteral :: Parser SExpression
+textLiteral = do
+  sourcePosition <- getSourcePos
+  symbol "\""
+  literal <- some printChar
+  symbol "\""
+  pure $ TextLiteral (sourcePosition, Text.pack literal)
 
 -- | ...
 sExpression :: Parser SExpression

@@ -11,9 +11,6 @@ spec = do
       eResults <- readSnailFile "examples/basic.snail"
       eResults `shouldSatisfy` isRight
 
-    -- Not concerned with this at the lexing stage, we can
-    -- error at the validation phase or just treat this
-    -- as '()'
     it "lex an empty snail file" $ do
       eResults <- readSnailFile "examples/fail-empty.snail"
       eResults `shouldSatisfy` isLeft

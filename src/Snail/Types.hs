@@ -1,32 +1,38 @@
 module Snail.Types where
 
 import Data.Text (Text)
-import Data.Text qualified as T
-import Data.Text.Display (Display (..), display)
+import Data.Text.Display (Display (..))
 import Data.Text.Lazy.Builder qualified as B
+import Data.Void (Void)
+import Text.Megaparsec hiding (Token)
 
-data Expression
+-- | TODO: 'Void' is the error type but we should probably use an explicit error type
+type Parser = Parsec Void Text
+
+data Keywords
   = Nil
-  | Symbol Text
+  | Lambda
+  | If
+  | Let
+  deriving (Eq, Show)
+
+instance Display Keywords where
+  displayBuilder = \case
+    x -> displayBuilder $ show x
+
+data Token
+  = Atom Text
   | Boolean Bool
   | Number Integer
-  | String Text
-  | Quote Expression
-  | List [Expression]
-  | Lambda [Text] Expression
-  deriving (Eq)
+  | TextLiteral Text
+  | Keyword Keywords
+  deriving (Eq, Show)
 
-instance Display Expression where
+instance Display Token where
   displayBuilder = \case
-    Nil -> "Nil"
-    Symbol expr -> B.fromText expr
-    Boolean True -> "#t"
-    Boolean False -> "#f"
+    Atom expr -> B.fromText expr
+    Boolean True -> "true"
+    Boolean False -> "false"
     Number int -> displayBuilder int
-    String str -> "\"" <> B.fromText str <> "\""
-    Quote ast -> "'" <> displayBuilder ast
-    List exprs -> "(" <> B.fromText (T.unwords (display <$> exprs)) <> ")"
-    Lambda exprs ast -> "<lambda (" <> B.fromText (T.unwords (display <$> exprs)) <> ") (" <> displayBuilder ast <> ")>"
-
-instance Show Expression where
-  show = T.unpack . display
+    TextLiteral str -> "\"" <> B.fromText str <> "\""
+    Keyword keyword -> displayBuilder keyword

@@ -28,6 +28,7 @@ library
       Snail.Characters
       Snail.IO
       Snail.Lexer
+      Snail.Tokens
       Snail.Types
   other-modules:
       Paths_snailscheme

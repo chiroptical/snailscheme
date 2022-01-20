@@ -8,13 +8,11 @@ module Snail.Lexer (
   textLiteral,
 ) where
 
-import Control.Monad (when)
-import Data.Functor (($>))
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Void
 import Snail.Characters
-import Text.Megaparsec hiding (Tokens (..), token)
+import Text.Megaparsec hiding (token)
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 
@@ -46,10 +44,6 @@ symbol = L.symbol spaces
 -- | Parse an S-Expression
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
-
--- | A 'lexeme' is ...
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme spaces
 
 -- | The list of valid token characters, note that we allow invalid tokens at this point
 validCharacter :: Parser Char
@@ -99,8 +93,8 @@ term = token <|> textLiteral <|> sExpression
 token :: Parser SExpression
 token = do
   sourcePosition <- getSourcePos
-  token <- some validCharacter
-  pure $ Token (sourcePosition, Text.pack token)
+  token' <- some validCharacter
+  pure $ Token (sourcePosition, Text.pack token')
 
 -- | ...
 quotes :: Parser a -> Parser a
@@ -131,5 +125,6 @@ textLiteral = do
 sExpression :: Parser SExpression
 sExpression = SExpression <$> parens (term `sepEndBy` spaces)
 
+-- | ...
 sExpressions :: Parser [SExpression]
 sExpressions = spaces *> sExpression `sepEndBy1` spaces

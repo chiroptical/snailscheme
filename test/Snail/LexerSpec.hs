@@ -5,11 +5,9 @@ module Snail.LexerSpec (spec) where
 
 import Data.Maybe (isJust, isNothing)
 import Data.Text
-import Property
 import Snail.Lexer
 import Test.Hspec
-import Test.QuickCheck
-import Text.Megaparsec (parseMaybe, parseTest)
+import Text.Megaparsec (parseMaybe)
 import Text.RawString.QQ
 
 foldTokens :: SExpression -> [Text]

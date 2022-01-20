@@ -1,5 +1,3 @@
---
-
 {- | Definitions
 
 - Lexer: `Text -> [Text]`

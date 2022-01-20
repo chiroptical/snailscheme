@@ -10,8 +10,8 @@ import Test.Hspec
 import Text.Megaparsec (parseMaybe)
 import Text.RawString.QQ
 
-foldTokens :: SExpression -> [Text]
-foldTokens = go []
+foldLexemes :: SExpression -> [Text]
+foldLexemes = go []
   where
     go :: [Text] -> SExpression -> [Text]
     go acc (Lexeme (_, t)) = acc ++ [t]
@@ -27,8 +27,8 @@ sExpressionShouldBe input output = do
   let mSExpr = parseMaybe sExpression input
   mSExpr `shouldSatisfy` isJust
   let Just sExpr = mSExpr
-      tokens = foldTokens sExpr
-  tokens `shouldBe` output
+      lexemes = foldLexemes sExpr
+  lexemes `shouldBe` output
 
 textLiteralShouldBe :: Text -> Text -> Expectation
 textLiteralShouldBe input output = do

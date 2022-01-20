@@ -14,8 +14,8 @@ foldTokens :: SExpression -> [Text]
 foldTokens = go []
   where
     go :: [Text] -> SExpression -> [Text]
-    go acc (Token (_, t)) = acc ++ [t]
-    go acc (TextLiteral (_, t)) = acc ++ [t]
+    go acc (Lexeme (_, t)) = acc ++ [t]
+    go acc (TextLiteral t) = acc ++ [t]
     go acc (SExpression []) = acc
     go acc (SExpression (x : xs)) = lgo (go acc x) xs
     lgo :: [Text] -> [SExpression] -> [Text]
@@ -32,10 +32,7 @@ sExpressionShouldBe input output = do
 
 textLiteralShouldBe :: Text -> Text -> Expectation
 textLiteralShouldBe input output = do
-  let mSExpr = parseMaybe textLiteral input
-  mSExpr `shouldSatisfy` isJust
-  let Just (TextLiteral (_, result)) = mSExpr
-  result `shouldBe` output
+  parseMaybe textLiteral input `shouldBe` Just (TextLiteral output)
 
 spec :: Spec
 spec = do
@@ -74,6 +71,15 @@ spec = do
 
     it "successfully lex line comment followed by token" $ do
       "(; ...\nabc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex line comment with \r\n followed by token" $ do
+      "(; ...\r\nabc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex line comment with \t followed by token" $ do
+      "(; ...\n\tabc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex line comment with \v followed by token" $ do
+      "(; ...\n\vabc)" `sExpressionShouldBe` ["abc"]
 
     it "successfully lex block comment" $ do
       "(#| ... |#)" `sExpressionShouldBe` []

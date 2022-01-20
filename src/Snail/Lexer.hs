@@ -1,3 +1,13 @@
+--
+
+{- | Definitions
+
+- Lexer: `Text -> [Text]`
+- Token: The leaves in your AST, e.g. TextLiteral, Number, etc
+
+Here, we implement a structurally aware lexer that supports one token type
+(text literals) for convenience.
+-}
 module Snail.Lexer (
   -- * The parsers you should use
   SExpression (..),
@@ -75,26 +85,23 @@ validCharacter =
  @
 
  The 'Data.Tree.Tree' type in containers is non-empty which isn't exactly what we are looking for
-
- TODO: can we have a smart constructor only?
- TODO: add TextLiteral for literal strings (check r5rs for literal string syntax, I think it is "..." and not '...')
 -}
 data SExpression
-  = Token (SourcePos, Text)
-  | TextLiteral (SourcePos, Text)
+  = Lexeme (SourcePos, Text)
+  | TextLiteral Text
   | SExpression [SExpression]
   deriving (Eq, Show)
 
 -- | ...
-term :: Parser SExpression
-term = token <|> textLiteral <|> sExpression
+lexemes :: Parser SExpression
+lexemes = lexeme <|> textLiteral <|> sExpression
 
 -- | ...
-token :: Parser SExpression
-token = do
+lexeme :: Parser SExpression
+lexeme = do
   sourcePosition <- getSourcePos
-  token' <- some validCharacter
-  pure $ Token (sourcePosition, Text.pack token')
+  lexeme' <- some validCharacter
+  pure $ Lexeme (sourcePosition, Text.pack lexeme')
 
 -- | ...
 quotes :: Parser a -> Parser a
@@ -113,17 +120,12 @@ nonQuoteCharacter = do
 -- | ...
 textLiteral :: Parser SExpression
 textLiteral = do
-  sourcePosition <- getSourcePos
   text <- quotes (some $ escapedQuote <|> nonQuoteCharacter)
-  pure $
-    TextLiteral
-      ( sourcePosition
-      , Text.concat text
-      )
+  pure $ TextLiteral $ Text.concat text
 
 -- | ...
 sExpression :: Parser SExpression
-sExpression = SExpression <$> parens (term `sepEndBy` spaces)
+sExpression = SExpression <$> parens (lexemes `sepEndBy` spaces)
 
 -- | ...
 sExpressions :: Parser [SExpression]

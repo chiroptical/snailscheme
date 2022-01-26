@@ -28,7 +28,7 @@ library
       Snail.Characters
       Snail.IO
       Snail.Lexer
-      Snail.Tokens
+      Snail.Token
       Snail.Types
   other-modules:
       Paths_snailscheme
@@ -73,6 +73,7 @@ test-suite snailscheme-test
   main-is: Spec.hs
   other-modules:
       Property
+      Snail.ASTSpec
       Snail.IOSpec
       Snail.LexerSpec
       Paths_snailscheme

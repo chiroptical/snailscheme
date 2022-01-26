@@ -36,3 +36,8 @@ instance Display Token where
     Number int -> displayBuilder int
     TextLiteral str -> "\"" <> B.fromText str <> "\""
     Keyword keyword -> displayBuilder keyword
+
+data AST
+  = Node (SourcePos, Token)
+  | AST [AST]
+  deriving (Eq, Show)

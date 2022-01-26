@@ -1,9 +1,11 @@
-module Snail.Tokens where
+module Snail.Token where
 
+import Data.Text (Text)
 import Data.Text qualified as Text
 import Snail.Characters
+import Snail.Lexer qualified as Lexer
 import Snail.Types
-import Text.Megaparsec hiding (Token)
+import Text.Megaparsec hiding (Token, token)
 
 -- | ...
 parseInitialCharacter :: Parser Char
@@ -36,3 +38,26 @@ parseNumber = do
   pure $ case sign of
     Just '-' -> Number (negate number)
     _ -> Number number
+
+-- | ...
+parseTerm :: Parser Token
+parseTerm = try parseNumber <|> parseAtom
+
+-- | ...
+data ASTException
+  = UnableToParseLexeme Text SourcePos
+  deriving (Eq, Show)
+
+{- | ...
+ 'Data.Either.Validation' might work better here...
+-}
+sExpressionToAST :: Lexer.SExpression -> Either [ASTException] AST
+sExpressionToAST = \case
+  Lexer.TextLiteral (sourcePosition, text) ->
+    Right $ Node (sourcePosition, TextLiteral text)
+  Lexer.Lexeme (sourcePosition, text) ->
+    let result = parseMaybe parseTerm text
+     in case result of
+          Nothing -> Left [UnableToParseLexeme text sourcePosition]
+          Just token -> Right $ Node (sourcePosition, token)
+  Lexer.SExpression xs -> AST <$> traverse sExpressionToAST xs

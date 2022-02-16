@@ -9,13 +9,13 @@ specialInitialCharacter :: String
 specialInitialCharacter = "!$%&*/:<=>?^_~"
 
 -- | ...
+peculiarCharacter :: String
+peculiarCharacter = "+-."
+
+-- | ...
 digitCharacter :: String
 digitCharacter = ['0' .. '9']
 
 -- | ...
 specialSubsequentCharacter :: String
 specialSubsequentCharacter = "+-.@"
-
--- | ...
-operatorCharacters :: String
-operatorCharacters = "+-*/%^"

@@ -9,11 +9,13 @@ import Text.Megaparsec hiding (Token, token)
 
 -- | ...
 parseInitialCharacter :: Parser Char
-parseInitialCharacter = oneOf $ initialCharacter <> specialInitialCharacter
+parseInitialCharacter = oneOf $ initialCharacter <> specialInitialCharacter <> peculiarCharacter
 
 -- | ...
 parseSubsequentCharacter :: Parser Char
-parseSubsequentCharacter = parseInitialCharacter <|> oneOf (specialSubsequentCharacter <> digitCharacter)
+parseSubsequentCharacter =
+  parseInitialCharacter
+    <|> oneOf (specialSubsequentCharacter <> digitCharacter <> peculiarCharacter)
 
 -- | ...
 parseAtom :: Parser Token
@@ -41,11 +43,7 @@ parseNumber = do
 
 -- | ...
 parseTerm :: Parser Token
-parseTerm = try parseNumber <|> parseAtom <|> parseOperator
-
--- | ...
-parseOperator :: Parser Token
-parseOperator = Operator . Text.pack <$> many (oneOf operatorCharacters)
+parseTerm = try parseNumber <|> parseAtom
 
 -- | ...
 data ASTException

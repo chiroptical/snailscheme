@@ -73,7 +73,6 @@ test-suite snailscheme-test
   main-is: Spec.hs
   other-modules:
       Property
-      Snail.ASTSpec
       Snail.IOSpec
       Snail.LexerSpec
       Paths_snailscheme

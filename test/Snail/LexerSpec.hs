@@ -15,7 +15,7 @@ foldLexemes = go []
   where
     go :: [Text] -> SExpression -> [Text]
     go acc (Lexeme (_, t)) = acc ++ [t]
-    go acc (TextLiteral (_, t)) = acc ++ [t]
+    go acc (TextLiteral t) = acc ++ [t]
     go acc (SExpression []) = acc
     go acc (SExpression (x : xs)) = lgo (go acc x) xs
     lgo :: [Text] -> [SExpression] -> [Text]
@@ -30,22 +30,18 @@ sExpressionShouldBe input output = do
       lexemes = foldLexemes sExpr
   lexemes `shouldBe` output
 
-textLiteralShouldBe :: Text -> [Text] -> Expectation
+textLiteralShouldBe :: Text -> Text -> Expectation
 textLiteralShouldBe input output = do
-  let mSExpr = parseMaybe textLiteral input
-  mSExpr `shouldSatisfy` isJust
-  let Just sExpr = mSExpr
-      lexemes = foldLexemes sExpr
-  lexemes `shouldBe` output
+  parseMaybe textLiteral input `shouldBe` Just (TextLiteral output)
 
 spec :: Spec
 spec = do
   describe "parse text literals" $ do
     it "successfully parses a basic text literal" $ do
-      [r|"hello \"world"|] `textLiteralShouldBe` [[r|hello \"world|]]
+      [r|"hello \"world"|] `textLiteralShouldBe` [r|hello \"world|]
 
     it "successfully parses a text literal with leading/trailing quotes" $ do
-      [r|"\"hello \"world\""|] `textLiteralShouldBe` [[r|\"hello \"world\"|]]
+      [r|"\"hello \"world\""|] `textLiteralShouldBe` [r|\"hello \"world\"|]
 
     it "fails to lex text literal with unescaped quote" $ do
       let mSExpr = parseMaybe textLiteral [r|"hello "world"|]

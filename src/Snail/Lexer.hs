@@ -18,11 +18,14 @@ module Snail.Lexer (
 
 import Data.Text (Text)
 import Data.Text qualified as Text
+import Data.Void
 import Snail.Characters
-import Snail.Types (Parser)
-import Text.Megaparsec
+import Text.Megaparsec hiding (token)
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
+
+-- | TODO: 'Void' is the error type but we should use an explicit error type
+type Parser = Parsec Void Text
 
 {- | Megaparsec's 'skipLineComment' takes a prefix and skips lines that begin
  with that prefix
@@ -83,7 +86,7 @@ validCharacter =
 -}
 data SExpression
   = Lexeme (SourcePos, Text)
-  | TextLiteral (SourcePos, Text)
+  | TextLiteral Text
   | SExpression [SExpression]
   deriving (Eq, Show)
 
@@ -115,9 +118,8 @@ nonQuoteCharacter = do
 -- | ...
 textLiteral :: Parser SExpression
 textLiteral = do
-  sourcePosition <- getSourcePos
   text <- quotes (some $ escapedQuote <|> nonQuoteCharacter)
-  pure $ TextLiteral (sourcePosition, Text.concat text)
+  pure $ TextLiteral $ Text.concat text
 
 -- | ...
 sExpression :: Parser SExpression

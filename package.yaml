@@ -59,3 +59,4 @@ tests:
     - hspec
     - hspec-discover
     - QuickCheck
+    - raw-strings-qq

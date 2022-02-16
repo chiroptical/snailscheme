@@ -25,6 +25,8 @@ source-repository head
 
 library
   exposed-modules:
+      Snail.Characters
+      Snail.IO
       Snail.Lexer
       Snail.Types
   other-modules:
@@ -70,6 +72,7 @@ test-suite snailscheme-test
   main-is: Spec.hs
   other-modules:
       Property
+      Snail.IOSpec
       Snail.LexerSpec
       Paths_snailscheme
   hs-source-dirs:
@@ -87,6 +90,7 @@ test-suite snailscheme-test
     , hspec-discover
     , megaparsec
     , mtl
+    , raw-strings-qq
     , snailscheme
     , text
     , text-display

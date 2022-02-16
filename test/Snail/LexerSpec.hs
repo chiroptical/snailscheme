@@ -1,52 +1,106 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
+
 module Snail.LexerSpec (spec) where
 
-import Data.Text qualified as T
-import Property
+import Data.Maybe (isJust, isNothing)
+import Data.Text
 import Snail.Lexer
 import Test.Hspec
-import Test.QuickCheck
-import Text.Megaparsec
+import Text.Megaparsec (parseMaybe)
+import Text.RawString.QQ
+
+foldLexemes :: SExpression -> [Text]
+foldLexemes = go []
+  where
+    go :: [Text] -> SExpression -> [Text]
+    go acc (Lexeme (_, t)) = acc ++ [t]
+    go acc (TextLiteral t) = acc ++ [t]
+    go acc (SExpression []) = acc
+    go acc (SExpression (x : xs)) = lgo (go acc x) xs
+    lgo :: [Text] -> [SExpression] -> [Text]
+    lgo acc [] = acc
+    lgo acc (x : xs) = lgo (go acc x) xs
+
+sExpressionShouldBe :: Text -> [Text] -> Expectation
+sExpressionShouldBe input output = do
+  let mSExpr = parseMaybe sExpression input
+  mSExpr `shouldSatisfy` isJust
+  let Just sExpr = mSExpr
+      lexemes = foldLexemes sExpr
+  lexemes `shouldBe` output
+
+textLiteralShouldBe :: Text -> Text -> Expectation
+textLiteralShouldBe input output = do
+  parseMaybe textLiteral input `shouldBe` Just (TextLiteral output)
 
 spec :: Spec
 spec = do
-  describe "Parsing comments" $ do
-    it "successfully parses line comments" $ do
-      parseMaybe skipLineComment "; ..." `shouldBe` Just ()
-    it "successfully parses block comments" $ do
-      parseMaybe skipBlockComment "#| ... |#" `shouldBe` Just ()
-    it "successfully parses nested block comments" $ do
-      parseMaybe skipBlockComment "#| ... #| ... |# ... |#" `shouldBe` Just ()
-    it "fails to parse nested block comments with missing internal start" $ do
-      parseMaybe skipBlockComment "#| ... |# ... |#" `shouldBe` Nothing
-    it "fails to parse nested block comments with missing internal stop" $ do
-      parseMaybe skipBlockComment "#| ... #| ... |#" `shouldBe` Nothing
-    it "fails to parse block comment with missing stop" $ do
-      parseMaybe skipBlockComment "#| ..." `shouldBe` Nothing
+  describe "parse text literals" $ do
+    it "successfully parses a basic text literal" $ do
+      [r|"hello \"world"|] `textLiteralShouldBe` [r|hello \"world|]
 
-  describe "Parsing symbols" $ do
-    it "successfully parses any valid symbol" $ do
-      forAll genSymbol $ \s -> parseMaybe (symbol s) s `shouldBe` Just s
+    it "successfully parses a text literal with leading/trailing quotes" $ do
+      [r|"\"hello \"world\""|] `textLiteralShouldBe` [r|\"hello \"world\"|]
 
-  describe "Signed and unsigned integers" $ do
-    let tshow = T.pack . show
-    it "successfully parses positive and negative integers" $ do
-      forAll arbitrary $
-        \i -> parseMaybe signedInteger (tshow i) `shouldBe` Just i
-    it "successfully parses positive signed integers" $ do
-      forAll arbitrary $
-        \i -> parseMaybe signedInteger ("+ " <> tshow (abs i)) `shouldBe` Just (abs i)
+    it "fails to lex text literal with unescaped quote" $ do
+      let mSExpr = parseMaybe textLiteral [r|"hello "world"|]
+      mSExpr `shouldSatisfy` isNothing
 
-  describe "Parsing parens" $ do
-    it "fails to parse parens of line comment" $ do
-      parseMaybe (parens skipLineComment) "( ; ... )" `shouldBe` Nothing
-    it "successfully parses parens of integer" $ do
-      parseMaybe (parens signedInteger) "(42)" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "( 42 )" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "(-42)" `shouldBe` Just (-42)
-      parseMaybe (parens signedInteger) "( -42 )" `shouldBe` Just (-42)
-    it "successfully parses parens of positive signed integer" $ do
-      parseMaybe (parens signedInteger) "(+42)" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "( +42 )" `shouldBe` Just 42
-    it "successfully parses parens of integer with a block comment" $ do
-      parseMaybe (parens signedInteger) "( #|...|# 42 )" `shouldBe` Just 42
-      parseMaybe (parens signedInteger) "( 42 #|...|# )" `shouldBe` Just 42
+  describe "parse sExpression" $ do
+    it "successfully lex a basic list" $ do
+      "(a b c)" `sExpressionShouldBe` ["a", "b", "c"]
+
+    it "successfully lex a basic list" $ do
+      "(1 a)" `sExpressionShouldBe` ["1", "a"]
+
+    it "successfully lex a single element list" $ do
+      "(1a)" `sExpressionShouldBe` ["1a"]
+
+    it "successfully lex a nested s-expression" $ do
+      "((1a))" `sExpressionShouldBe` ["1a"]
+
+    it "successfully lex nested s-expressions" $ do
+      "(() ())" `sExpressionShouldBe` []
+
+    it "successfully lex a nested s-expressions" $ do
+      "((()) (()))" `sExpressionShouldBe` []
+
+    it "successfully lex line comment" $ do
+      "(; ...\n)" `sExpressionShouldBe` []
+
+    it "successfully lex line comment followed by token" $ do
+      "(; ...\nabc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex line comment with \r\n followed by token" $ do
+      "(; ...\r\nabc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex line comment with \t followed by token" $ do
+      "(; ...\n\tabc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex line comment with \v followed by token" $ do
+      "(; ...\n\vabc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex block comment" $ do
+      "(#| ... |#)" `sExpressionShouldBe` []
+
+    it "successfully lex block comment followed by token" $ do
+      "(#| ... |#abc)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex token followed by block comments" $ do
+      "(abc#| ... |#)" `sExpressionShouldBe` ["abc"]
+
+    it "successfully lex block comments sorrounded by tokens" $ do
+      "(abc#| ... |#def)" `sExpressionShouldBe` ["abc", "def"]
+
+    it "successfully lex nested block comments" $ do
+      "(#| ... #| ... |# ... |#)" `sExpressionShouldBe` []
+
+    it "fail to lex nested block comments with missing internal start" $ do
+      parseMaybe sExpression "(#| ... |# ... |#)" `shouldBe` Nothing
+
+    it "fail to lex nested block comments with missing internal stop" $ do
+      parseMaybe sExpression "(#| ... #| ... |#)" `shouldBe` Nothing
+
+    it "fail to lex block comment with missing stop" $ do
+      parseMaybe sExpression "(#| ...)" `shouldBe` Nothing

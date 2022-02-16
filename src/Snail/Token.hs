@@ -41,7 +41,11 @@ parseNumber = do
 
 -- | ...
 parseTerm :: Parser Token
-parseTerm = try parseNumber <|> parseAtom
+parseTerm = try parseNumber <|> parseAtom <|> parseOperator
+
+-- | ...
+parseOperator :: Parser Token
+parseOperator = Operator . Text.pack <$> many (oneOf operatorCharacters)
 
 -- | ...
 data ASTException

@@ -15,3 +15,7 @@ digitCharacter = ['0' .. '9']
 -- | ...
 specialSubsequentCharacter :: String
 specialSubsequentCharacter = "+-.@"
+
+-- | ...
+operatorCharacters :: String
+operatorCharacters = "+-*/%^"

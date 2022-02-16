@@ -26,6 +26,9 @@ data Token
   | Number Integer
   | TextLiteral Text
   | Keyword Keywords
+  | -- TODO: Everything in Scheme is a prefix function, but should we define, e.g. '+',
+    -- as an 'Operator Text' or a 'Function Text AST AST' or similar?
+    Operator Text
   deriving (Eq, Show)
 
 instance Display Token where
@@ -36,6 +39,7 @@ instance Display Token where
     Number int -> displayBuilder int
     TextLiteral str -> "\"" <> B.fromText str <> "\""
     Keyword keyword -> displayBuilder keyword
+    Operator txt -> displayBuilder txt
 
 data AST
   = Node (SourcePos, Token)

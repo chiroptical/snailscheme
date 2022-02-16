@@ -86,7 +86,7 @@ validCharacter =
 -}
 data SExpression
   = Lexeme (SourcePos, Text)
-  | TextLiteral Text
+  | TextLiteral (SourcePos, Text)
   | SExpression [SExpression]
   deriving (Eq, Show)
 
@@ -118,8 +118,9 @@ nonQuoteCharacter = do
 -- | ...
 textLiteral :: Parser SExpression
 textLiteral = do
+  sourcePosition <- getSourcePos
   text <- quotes (some $ escapedQuote <|> nonQuoteCharacter)
-  pure $ TextLiteral $ Text.concat text
+  pure $ TextLiteral (sourcePosition, Text.concat text)
 
 -- | ...
 sExpression :: Parser SExpression

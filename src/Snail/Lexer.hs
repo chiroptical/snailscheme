@@ -128,4 +128,4 @@ sExpression = SExpression <$> parens (lexemes `sepEndBy` spaces)
 
 -- | ...
 sExpressions :: Parser [SExpression]
-sExpressions = spaces *> sExpression `sepEndBy1` spaces
+sExpressions = (spaces *> sExpression `sepEndBy1` spaces) <* eof

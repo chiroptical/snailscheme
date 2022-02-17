@@ -4,6 +4,7 @@ import Data.Text (Text)
 import Data.Text.Display (Display (..))
 import Data.Text.Lazy.Builder qualified as B
 import Data.Void (Void)
+import Test.QuickCheck
 import Text.Megaparsec hiding (Token)
 
 -- | TODO: 'Void' is the error type but we should probably use an explicit error type
@@ -14,11 +15,15 @@ data Keywords
   | Lambda
   | If
   | Let
-  deriving (Eq, Show)
+  | Quote
+  deriving (Eq, Show, Enum, Bounded)
 
 instance Display Keywords where
   displayBuilder = \case
     x -> displayBuilder $ show x
+
+instance Arbitrary Keywords where
+  arbitrary = elements [minBound .. maxBound]
 
 data Token
   = Atom Text

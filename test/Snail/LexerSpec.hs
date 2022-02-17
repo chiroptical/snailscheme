@@ -55,6 +55,13 @@ spec = do
     it "successfully lex a basic list" $ do
       "(a b c)" `sExpressionShouldBe` ["a", "b", "c"]
 
+    it "successfully parse nil inside parentheses" $ do
+      "(nil)" `sExpressionShouldBe` ["nil"]
+
+    it "fail to parse a standalone nil" $ do
+      let mSExpr = parseMaybe sExpression "nil"
+      mSExpr `shouldSatisfy` isNothing
+
     it "successfully lex a basic list" $ do
       "(1 a)" `sExpressionShouldBe` ["1", "a"]
 
@@ -108,3 +115,9 @@ spec = do
 
     it "fail to lex block comment with missing stop" $ do
       parseMaybe sExpression "(#| ...)" `shouldBe` Nothing
+
+    it "can handle subsequent s-expressions" $ do
+      parseMaybe sExpressions "()(nil)()" `shouldSatisfy` isJust
+
+    it "fails to parse nested naked nil" $ do
+      parseMaybe sExpressions "()nil()" `shouldSatisfy` isNothing

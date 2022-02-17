@@ -13,4 +13,12 @@
   (f (lambda (x y) (+ x y)))
   (print (f 2 1)))
 
+(quote hello)
+
+(nil)
+
+(print true)
+
+(print false)
+
 ; end comment

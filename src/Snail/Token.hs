@@ -30,6 +30,7 @@ parseAtom = do
     "if" -> Keyword If
     "let" -> Keyword Let
     "lambda" -> Keyword Lambda
+    "quote" -> Keyword Quote
     _ -> Atom $ Text.pack atom
 
 -- | ...

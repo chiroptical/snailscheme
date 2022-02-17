@@ -15,7 +15,7 @@ foldLexemes = go []
   where
     go :: [Text] -> SExpression -> [Text]
     go acc (Lexeme (_, t)) = acc ++ [t]
-    go acc (TextLiteral t) = acc ++ [t]
+    go acc (TextLiteral (_, t)) = acc ++ [t]
     go acc (SExpression []) = acc
     go acc (SExpression (x : xs)) = lgo (go acc x) xs
     lgo :: [Text] -> [SExpression] -> [Text]
@@ -30,18 +30,22 @@ sExpressionShouldBe input output = do
       lexemes = foldLexemes sExpr
   lexemes `shouldBe` output
 
-textLiteralShouldBe :: Text -> Text -> Expectation
+textLiteralShouldBe :: Text -> [Text] -> Expectation
 textLiteralShouldBe input output = do
-  parseMaybe textLiteral input `shouldBe` Just (TextLiteral output)
+  let mSExpr = parseMaybe textLiteral input
+  mSExpr `shouldSatisfy` isJust
+  let Just sExpr = mSExpr
+      lexemes = foldLexemes sExpr
+  lexemes `shouldBe` output
 
 spec :: Spec
 spec = do
   describe "parse text literals" $ do
     it "successfully parses a basic text literal" $ do
-      [r|"hello \"world"|] `textLiteralShouldBe` [r|hello \"world|]
+      [r|"hello \"world"|] `textLiteralShouldBe` [[r|hello \"world|]]
 
     it "successfully parses a text literal with leading/trailing quotes" $ do
-      [r|"\"hello \"world\""|] `textLiteralShouldBe` [r|\"hello \"world\"|]
+      [r|"\"hello \"world\""|] `textLiteralShouldBe` [[r|\"hello \"world\"|]]
 
     it "fails to lex text literal with unescaped quote" $ do
       let mSExpr = parseMaybe textLiteral [r|"hello "world"|]
@@ -50,6 +54,13 @@ spec = do
   describe "parse sExpression" $ do
     it "successfully lex a basic list" $ do
       "(a b c)" `sExpressionShouldBe` ["a", "b", "c"]
+
+    it "successfully parse nil inside parentheses" $ do
+      "(nil)" `sExpressionShouldBe` ["nil"]
+
+    it "fail to parse a standalone nil" $ do
+      let mSExpr = parseMaybe sExpression "nil"
+      mSExpr `shouldSatisfy` isNothing
 
     it "successfully lex a basic list" $ do
       "(1 a)" `sExpressionShouldBe` ["1", "a"]
@@ -104,3 +115,9 @@ spec = do
 
     it "fail to lex block comment with missing stop" $ do
       parseMaybe sExpression "(#| ...)" `shouldBe` Nothing
+
+    it "can handle subsequent s-expressions" $ do
+      parseMaybe sExpressions "()(nil)()" `shouldSatisfy` isJust
+
+    it "fails to parse nested naked nil" $ do
+      parseMaybe sExpressions "()nil()" `shouldSatisfy` isNothing

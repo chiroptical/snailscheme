@@ -28,6 +28,7 @@ library
       Snail.Characters
       Snail.IO
       Snail.Lexer
+      Snail.Token
       Snail.Types
   other-modules:
       Paths_snailscheme
@@ -38,7 +39,8 @@ library
       LambdaCase
       OverloadedStrings
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , containers
     , megaparsec
     , mtl
@@ -58,7 +60,8 @@ executable snailscheme-exe
       OverloadedStrings
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , base >=4.7 && <5
     , containers
     , megaparsec
     , mtl
@@ -72,6 +75,7 @@ test-suite snailscheme-test
   main-is: Spec.hs
   other-modules:
       Property
+      Snail.ASTSpec
       Snail.IOSpec
       Snail.LexerSpec
       Paths_snailscheme

@@ -26,6 +26,7 @@ dependencies:
 - mtl
 - text
 - text-display
+- QuickCheck
 
 default-extensions:
 - ImportQualifiedPost
@@ -58,5 +59,4 @@ tests:
     - snailscheme
     - hspec
     - hspec-discover
-    - QuickCheck
     - raw-strings-qq
